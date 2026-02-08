@@ -1,8 +1,8 @@
 #pragma once
 #include <Arduino.h>
 
-constexpr uint8_t  BUFFER_COUNT = 4;
-constexpr uint16_t BLOCK_SIZE   = 256;
+constexpr uint8_t  BUFFER_COUNT = 8;
+constexpr uint16_t BLOCK_SIZE   = 512;
 
 extern volatile int nbBlocToSend;
 extern volatile uint32_t freqEch;

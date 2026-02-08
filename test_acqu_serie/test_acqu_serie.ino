@@ -29,7 +29,7 @@ void acquisition(void){
 
             buffers[writeBuffer].samples[sampleIndex++] = avg;
             
-            /* Débug à 100Hz pour etre sur de voir tout dans le bon ordre
+            //Débug à 100Hz pour etre sur de voir tout dans le bon ordre
             Serial.print(sampleIndex);
             Serial.print("/");
             Serial.print(BLOCK_SIZE);
@@ -40,7 +40,7 @@ void acquisition(void){
             Serial.print(" - ");
             Serial.print(lastTick);
             Serial.print(" - ");
-            Serial.println(esp_timer_get_time());*/
+            Serial.println(esp_timer_get_time());
             
             if (sampleIndex >= BLOCK_SIZE) {
                 bufferReady[writeBuffer] = true;

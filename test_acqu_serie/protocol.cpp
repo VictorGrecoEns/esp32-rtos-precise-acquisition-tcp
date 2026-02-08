@@ -77,7 +77,6 @@ void get_metadata_from_server() {
     if (httpGet != 200 || counter < 0){
       esp_restart();
     }
-
     DynamicJsonDocument doc(512);
     deserializeJson(doc, http.getString());
     http.end();
@@ -119,7 +118,7 @@ void sendDataTask(void* parameter) {
             http.addHeader("Content-Type", "application/json");
             Serial.println(localBlock.timestamp);
             String payload;
-            payload.reserve(10*BLOCK_SIZE+128); // timestamp: 34, bloc: 8, samplesX: 13+4N+(N-1), {,,,}:5 --> 10*N+71
+            payload.reserve(6000);
 
             payload += "{";
             payload += "\"timestamp\":" + String(localBlock.timestamp) + ",";

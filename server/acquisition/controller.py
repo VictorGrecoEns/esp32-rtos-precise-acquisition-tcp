@@ -1,56 +1,92 @@
-from acquisition.storage import DataStorage
-import sys
-import numpy as np
 from time import time
+import numpy as np
 
-linesToDisplay = 15
-middleLine = "|-------|-------|----------------|------------------|"
-emptyLine = "|   --- |   --- |      -------   |     ---------    |"
+from rich.console import Console
+from rich.table import Table
+from rich.live import Live
+from rich.progress import Progress, BarColumn, TextColumn, TimeElapsedColumn
+
+from acquisition.storage import DataStorage
+
+
 class AcquisitionController:
-    def __init__(self, n_blocks):
+    def __init__(self, n_blocks: int):
         self.n_blocks = n_blocks
         self.received = 0
         self.last_timestamp = None
-        self.storage:DataStorage
         self.delay = 0.0
 
-    def init(self, fe, storage:DataStorage):
-        self.received       = 0
-        self.last_timestamp = None
-        self.storage        = storage
-        self.fe             = fe
-        self.delay          = time()
+        self.storage: DataStorage
 
-    def process_block(self, timestamp, samples:dict):
-        
-        if self.received % linesToDisplay == 0:
-            print(middleLine)
-            print(3*"\n")
-            sys.stdout.write(f"\033[{linesToDisplay+5}F")
+        self.console = Console()
+        self.live: Live | None = None
+
+    def init(self, fe: int, storage: DataStorage):
+        self.received = 0
+        self.last_timestamp = None
+        self.storage = storage
+        self.fe = fe
+        self.delay = time()
+
+        # --- Tableau ---
+        self.table = Table(title="Acquisition en cours", expand=True)
+        self.table.add_column("Reçu", justify="right")
+        self.table.add_column("Total", justify="right")
+        self.table.add_column("Moyenne éch V", justify="right")
+        self.table.add_column("Délai récep (ms)", justify="right")
+
+        # --- Progress bar ---
+        self.progress = Progress(
+            TextColumn("[bold blue]Progression"),
+            BarColumn(),
+            TextColumn("{task.completed}/{task.total} blocs"),
+            TimeElapsedColumn(),
+            expand=True,
+        )
+        self.task_id = self.progress.add_task("acq", total=self.n_blocks)
+
+        # --- Layout Live ---
+        self.live = Live(
+            self._render(),
+            console=self.console,
+            refresh_per_second=10,
+        )
+        self.live.__enter__()
+
+    def _render(self):
+        from rich.layout import Layout
+
+        layout = Layout()
+        layout.split_column(
+            Layout(self.table, ratio=3),
+            Layout(self.progress, ratio=1),
+        )
+        return layout
+
+    def process_block(self, timestamp: int, samples: list[int]):
         self.received += 1
-        print(f"|  {self.received:4d} |{self.n_blocks:6d} |   {np.mean(np.array(samples)):10.2f}   |{self.delay*1e3:13.2f}     |")
-        
-        if self.received == self.n_blocks:
-            for _ in range(linesToDisplay - self.received % linesToDisplay):
-                print(emptyLine)
-        
-        
-        sys.stdout.flush()
-        
-        # if self.last_timestamp is not None:
-        #     dt = timestamp - self.last_timestamp
-        #     fe_eval = len(samples) * 1e6 / dt
-        #     print(f"Bloc {self.received}/{self.n_blocks} fe={fe_eval:.1f} Hz, {timestamp=}")
-        # else:
-        #     print(f"Bloc {self.received}/{self.n_blocks}, {timestamp=}")
-        
-        
-        self.last_timestamp = timestamp
+        mean_v = np.mean(samples)
+        delay_ms = self.delay * 1e3
+
+        self.table.add_row(
+            f"{self.received}",
+            f"{self.n_blocks}",
+            f"{mean_v:.2f}",
+            f"{delay_ms:.2f}",
+        )
+
+        self.progress.update(self.task_id, advance=1)
 
         self.storage.append_block(samples)
 
-    def is_finished(self):
+        self.last_timestamp = timestamp
+        self.delay = time()
+
+    def is_finished(self) -> bool:
         return self.received >= self.n_blocks
 
     def close(self):
-        self.storage.close()
+        if self.live:
+            self.live.__exit__(None, None, None)
+        if self.storage:
+            self.storage.close()

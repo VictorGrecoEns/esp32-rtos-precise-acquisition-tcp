@@ -20,8 +20,7 @@ void send_init_to_server(uint32_t fe, uint16_t block_size, uint32_t n_blocks);
 void sendDataTask(void* parameter);
 
 // Buffers circulaires
-extern DataBlock buffersV[BUFFER_COUNT]; 
-extern DataBlock buffersI[BUFFER_COUNT];
+extern DataBlock buffers[BUFFER_COUNT];
 extern bool      bufferReady[BUFFER_COUNT];
 
 extern volatile uint8_t writeBuffer;

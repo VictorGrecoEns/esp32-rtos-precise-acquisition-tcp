@@ -10,8 +10,7 @@
 // ============================================================
 //                   Définition des buffers
 // ============================================================
-DataBlock buffersV[BUFFER_COUNT];
-DataBlock buffersI[BUFFER_COUNT];
+DataBlock buffers[BUFFER_COUNT];
 bool bufferReady[BUFFER_COUNT];
 
 volatile uint8_t writeBuffer = 0;
@@ -71,7 +70,7 @@ void get_metadata_from_server() {
     http.begin("http://192.168.17.7:5000/config");
     int httpGet = http.GET();
     while ( httpGet != 200 && counter>=0) {
-      blink(1,250);
+      blink(1,100);
       counter -= 1;
       httpGet = http.GET();
     }
@@ -101,14 +100,12 @@ void sendDataTask(void* parameter) {
 
     for (;;) {
         bool hasData = false;
-        DataBlock localBlockV; 
-        DataBlock localBlockI;
+        DataBlock localBlock;
         uint8_t blocNumber = 0;
 
         xSemaphoreTake(bufferMutex, portMAX_DELAY);
         if (bufferReady[readBuffer]) {
-            localBlockV = buffersV[readBuffer]; 
-            localBlockI = buffersI[readBuffer];
+            localBlock = buffers[readBuffer];
             blocNumber = readBuffer; 
             bufferReady[readBuffer] = false;
             readBuffer = (readBuffer + 1) % BUFFER_COUNT;
@@ -120,24 +117,17 @@ void sendDataTask(void* parameter) {
             HTTPClient http;
             http.begin(serverUrl);
             http.addHeader("Content-Type", "application/json");
-            Serial.println(localBlockV.timestamp);
+            Serial.println(localBlock.timestamp);
             String payload;
-            payload.reserve(10*BLOCK_SIZE+128); // timestamp: 34, bloc: 8, samplesX: 13+4N+(N-1), {,,,}:5 --> 10*N+71
+            payload.reserve(6000);
 
             payload += "{";
-            payload += "\"timestamp\":" + String(localBlockV.timestamp) + ",";
+            payload += "\"timestamp\":" + String(localBlock.timestamp) + ",";
             payload += "\"bloc\":" + String(blocNumber) + ","; 
-            payload += "\"samplesV\":[";
+            payload += "\"samples\":[";
 
             for (uint16_t i = 0; i < BLOCK_SIZE; i++) {
-                payload += String(localBlockV.samples[i]);
-                if (i < BLOCK_SIZE - 1) payload += ",";
-            }
-            
-            payload += "],\"samplesI\":[";
-
-            for (uint16_t i = 0; i < BLOCK_SIZE; i++) {
-                payload += String(localBlockI.samples[i]);
+                payload += String(localBlock.samples[i]);
                 if (i < BLOCK_SIZE - 1) payload += ",";
             }
             payload += "]}";
@@ -148,7 +138,7 @@ void sendDataTask(void* parameter) {
             
             // Serial monitoring
             Serial.print("WiFi Task: bloc envoyé = ");
-            Serial.print((int)((readBuffer - 1) % BUFFER_COUNT));
+            Serial.print((int)((readBuffer + BUFFER_COUNT - 1) % BUFFER_COUNT));
             Serial.print(", HTTP code = ");
             Serial.println(code);
         } else {

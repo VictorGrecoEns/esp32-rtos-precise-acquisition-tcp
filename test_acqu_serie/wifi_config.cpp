@@ -17,7 +17,7 @@ void connect_wifi() {
     Serial.print("Connexion au wifi..");
     
     while (WiFi.status() != WL_CONNECTED) {
-        blink(1,250);
+        blink(1,100);
         Serial.print(".");
     }
     Serial.println("\nConnecté au wifi !");

@@ -37,11 +37,12 @@ def init():
     controller.init(fe, storage)
     print(f"\nDuree de l'acquisition      = {args.duration_s}s")
     print(f"Fréquence d'échantillonnage = {controller.fe } Hz")
-    print(f"Nombre de bloc attendus     = {controller.n_blocks}\n\n")
+    print(f"Nombre de bloc attendus     = {controller.n_blocks}")
+    print(f"Temps estimé                = {controller.n_blocks*BLOC_SIZE/controller.fe:.2f} s --> {1e3*BLOC_SIZE/controller.fe:.2f} ms/bloc\n")
     print(middleLine)
-    print(f"|  Reçu | Total |  Moyenne éch V | Délai récep (ms) |")
+    print(f"| Reçu | Total |  Moyenne éch V | Délai récep (ms) |")
     print(middleLine)
-    print((linesToDisplay) * f"{emptyLine}\n")
+    print(emptyLine + (linesToDisplay-1) * f"\n{emptyLine}")
     return "INIT OK", 200
 
 @app.route("/data", methods=["POST"])
@@ -57,7 +58,7 @@ def data():
         controller.close()
         print(middleLine)
         sizeOfFile = os.path.getsize(os.path.dirname(__file__) + "/data/vg06022026_acq_1.bin")
-        print(f"\nAcquisition terminée ({sizeOfFile * 1e-3:.2f} ko)")
+        print(f"\nAcquisition terminée en {controller.timeTot:.1f} s| {sizeOfFile * 1e-3:.2f} ko")
     controller.delay = time()
     return "OK", 200
 

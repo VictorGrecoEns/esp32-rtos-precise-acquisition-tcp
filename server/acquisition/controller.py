@@ -3,9 +3,10 @@ import sys
 import numpy as np
 from time import time
 
-linesToDisplay = 15
-middleLine = "|-------|-------|----------------|------------------|"
-emptyLine = "|   --- |   --- |      -------   |     ---------    |"
+linesToDisplay = 8
+middleLine = "|======|=======|================|==================|"
+emptyLine = "|  --- |   --- |      -------   |     ---------    |"
+
 class AcquisitionController:
     def __init__(self, n_blocks):
         self.n_blocks = n_blocks
@@ -13,6 +14,7 @@ class AcquisitionController:
         self.last_timestamp = None
         self.storage:DataStorage
         self.delay = 0.0
+        self.timeTot = 0.0
 
     def init(self, fe, storage:DataStorage):
         self.received       = 0
@@ -27,9 +29,10 @@ class AcquisitionController:
             print(middleLine)
             print(3*"\n")
             sys.stdout.write(f"\033[{linesToDisplay+5}F")
+            
         self.received += 1
-        print(f"|  {self.received:4d} |{self.n_blocks:6d} |   {np.mean(np.array(samples)):10.2f}   |{self.delay*1e3:13.2f}     |")
-        
+        print(f"| {self.received:4d} |{self.n_blocks:6d} |   {np.mean(np.array(samples)):10.2f}   |{self.delay*1e3:13.2f}     |")
+        self.timeTot += self.delay
         if self.received == self.n_blocks:
             for _ in range(linesToDisplay - self.received % linesToDisplay):
                 print(emptyLine)

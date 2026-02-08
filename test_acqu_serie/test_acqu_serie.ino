@@ -61,24 +61,23 @@ void setup() {
     pinMode(PIN_LED, OUTPUT);
     pinMode(PIN_V, INPUT);
     digitalWrite(PIN_LED, LOW);
-    
-    
-    
+        
     connect_wifi();
-    blink(2, 200);
+    digitalWrite(PIN_LED, HIGH);delay(500);
+    blink(2, 100);
     
     get_metadata_from_server();
-    blink(3, 200);
+    
+    digitalWrite(PIN_LED, HIGH);delay(500);
+    blink(2, 100);
     
     isrBegin();
-    blink(4, 200);
     
     send_init_to_server(TIMER_ISR_FREQ_HZ / 4, BLOCK_SIZE, nbBlocToSend);
-    blink(2, 200);
     
     xTaskCreate(sendDataTask, "WiFiTask", 16384, nullptr, 1, nullptr);
     start_acquisition();
-    blink(2, 300);
+
     digitalWrite(PIN_LED, HIGH);
     buffers[0].timestamp = esp_timer_get_time();
     timerTicks = 0;
@@ -93,5 +92,4 @@ void setup() {
 
 
 void loop() {
-    
 }

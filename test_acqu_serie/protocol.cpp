@@ -70,7 +70,7 @@ void get_metadata_from_server() {
     http.begin("http://192.168.17.7:5000/config");
     int httpGet = http.GET();
     while ( httpGet != 200 && counter>=0) {
-      blink(1,100);
+      blink(1,250);
       counter -= 1;
       httpGet = http.GET();
     }
@@ -119,7 +119,7 @@ void sendDataTask(void* parameter) {
             http.addHeader("Content-Type", "application/json");
             Serial.println(localBlock.timestamp);
             String payload;
-            payload.reserve(6000);
+            payload.reserve(10*BLOCK_SIZE+128); // timestamp: 34, bloc: 8, samplesX: 13+4N+(N-1), {,,,}:5 --> 10*N+71
 
             payload += "{";
             payload += "\"timestamp\":" + String(localBlock.timestamp) + ",";

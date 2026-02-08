@@ -12,6 +12,8 @@ from acquisition.controller import AcquisitionController, middleLine, emptyLine,
 from acquisition.storage import DataStorage, BLOC_SIZE
 from plotting.liveplot import LivePlot
 
+FILE_NAME = "vg06022026_acq_1"
+
 args = parse_args()
 n_blocks = int(args.duration_s * args.freq_ech / BLOC_SIZE) + 1
 
@@ -28,7 +30,7 @@ def init():
     fe = int(data["fe"])
 
     storage = DataStorage(
-        filepath=os.path.dirname(__file__) + "/data/vg06022026_acq_1.bin",
+        filepath=os.path.dirname(__file__) + f"/data/{FILE_NAME}.bin",
         fe=fe
     )
 
@@ -37,7 +39,7 @@ def init():
     print(f"Fréquence d'échantillonnage = {controller.fe } Hz")
     print(f"Nombre de bloc attendus     = {controller.n_blocks}\n\n")
     print(middleLine)
-    print(f"|  Reçu | Total | Moyenne éch | Délai récep (ms) |")
+    print(f"|  Reçu | Total |  Moyenne éch V | Délai récep (ms) |")
     print(middleLine)
     print((linesToDisplay) * f"{emptyLine}\n")
     return "INIT OK", 200

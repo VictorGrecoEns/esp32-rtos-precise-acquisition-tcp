@@ -4,8 +4,8 @@ import numpy as np
 from time import time
 
 linesToDisplay = 15
-middleLine = "|-------|-------|----------------|----------------|------------------|"
-emptyLine = "|   --- |   --- |      -------   |      -------   |     ---------    |"
+middleLine = "|-------|-------|----------------|------------------|"
+emptyLine = "|   --- |   --- |      -------   |     ---------    |"
 class AcquisitionController:
     def __init__(self, n_blocks):
         self.n_blocks = n_blocks
@@ -28,7 +28,7 @@ class AcquisitionController:
             print(3*"\n")
             sys.stdout.write(f"\033[{linesToDisplay+5}F")
         self.received += 1
-        print(f"|  {self.received:4d} |{self.n_blocks:6d} |   {np.mean(np.array(samples['V'])):10.2f}   |   {np.mean(np.array(samples['I'])):10.2f}   |{self.delay*1e3:13.2f}     |")
+        print(f"|  {self.received:4d} |{self.n_blocks:6d} |   {np.mean(np.array(samples)):10.2f}   |{self.delay*1e3:13.2f}     |")
         
         if self.received == self.n_blocks:
             for _ in range(linesToDisplay - self.received % linesToDisplay):

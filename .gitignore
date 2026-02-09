@@ -1,3 +1,4 @@
 /server/data/
+/server/__pycache__/
 /backup/
 /datasheets/

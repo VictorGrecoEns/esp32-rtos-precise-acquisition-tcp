@@ -1,11 +1,7 @@
 from time import time
 import numpy as np
 
-from rich.console import Console
-from rich.table import Table
-from rich.live import Live
-from rich.progress import Progress, BarColumn, TextColumn, TimeElapsedColumn
-
+import sys
 from acquisition.storage import DataStorage
 
 
@@ -22,9 +18,6 @@ class AcquisitionController:
         
 
         self.storage: DataStorage
-
-        self.console = Console()
-        self.live: Live | None = None
 
     def init(self, fe: int, storage: DataStorage):
         self.received = 0
@@ -66,7 +59,5 @@ class AcquisitionController:
         return self.received >= self.n_blocks
 
     def close(self):
-        if self.live:
-            self.live.__exit__(None, None, None)
         if self.storage:
             self.storage.close()

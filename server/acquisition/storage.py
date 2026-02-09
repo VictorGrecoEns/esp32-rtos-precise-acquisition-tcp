@@ -1,7 +1,7 @@
 import struct
 from pathlib import Path
 
-BLOC_SIZE = 512
+BLOC_SIZE = 256
 
 
 class DataStorage:

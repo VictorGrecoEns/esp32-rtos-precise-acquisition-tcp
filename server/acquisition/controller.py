@@ -13,8 +13,7 @@ class AcquisitionController:
         self.received = 0
         self.last_timestamp = None
         self.storage:DataStorage
-        self.delay = 0.0
-        self.timeTot = 0.0
+        
 
     def init(self, fe, storage:DataStorage):
         self.received       = 0
@@ -22,6 +21,7 @@ class AcquisitionController:
         self.storage        = storage
         self.fe             = fe
         self.delay          = time()
+        self.timeTot = 0.0
 
     def process_block(self, timestamp, samples:dict):
         
@@ -31,7 +31,7 @@ class AcquisitionController:
             sys.stdout.write(f"\033[{linesToDisplay+5}F")
             
         self.received += 1
-        print(f"| {self.received:4d} |{self.n_blocks:6d} |   {np.mean(np.array(samples)):10.2f}   |{self.delay*1e3:13.2f}     |")
+        print(f"| {self.received:4d} |{self.n_blocks:6d} |   {np.mean(np.array(samples)):10.2f}   |{self.delay*1e3:13.2f}     |{self.timeTot*1e3/self.received:13.2f}     |")
         self.timeTot += self.delay
         if self.received == self.n_blocks:
             for _ in range(linesToDisplay - self.received % linesToDisplay):

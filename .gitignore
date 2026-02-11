@@ -1,4 +1,5 @@
 /server/data/
 /server/__pycache__/
+/server/acquisition/__pycache__/
 /backup/
 /datasheets/

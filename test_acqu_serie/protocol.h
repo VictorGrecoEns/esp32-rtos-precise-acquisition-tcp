@@ -1,15 +1,16 @@
 #pragma once
 #include <Arduino.h>
 
-constexpr uint8_t  BUFFER_COUNT = 8;
-constexpr uint16_t BLOCK_SIZE   = 512;
+constexpr uint8_t  BUFFER_COUNT = 4;
+constexpr uint16_t BLOCK_SIZE   = 256;
 
 extern volatile int nbBlocToSend;
 extern volatile uint32_t freqEch;
 
 struct DataBlock {
     uint64_t timestamp;
-    uint16_t samples[BLOCK_SIZE];
+    uint16_t samples1[BLOCK_SIZE];
+    uint16_t samples2[BLOCK_SIZE];
 };
 
 void start_acquisition();

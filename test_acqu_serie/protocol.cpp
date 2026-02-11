@@ -70,13 +70,14 @@ void get_metadata_from_server() {
     http.begin("http://192.168.17.7:5000/config");
     int httpGet = http.GET();
     while ( httpGet != 200 && counter>=0) {
-      blink(1,250);
+      blink(2,100);
       counter -= 1;
       httpGet = http.GET();
     }
     if (httpGet != 200 || counter < 0){
       esp_restart();
     }
+
     DynamicJsonDocument doc(512);
     deserializeJson(doc, http.getString());
     http.end();
@@ -87,7 +88,7 @@ void get_metadata_from_server() {
     Serial.print(nbBlocToSend);
     Serial.print(" et ce, à ");
     Serial.print(freqEch);
-    Serial.print("Hz");
+    Serial.println("Hz");
 }
 
 
@@ -116,17 +117,22 @@ void sendDataTask(void* parameter) {
             HTTPClient http;
             http.begin(serverUrl);
             http.addHeader("Content-Type", "application/json");
-            Serial.println(localBlock.timestamp);
             String payload;
-            payload.reserve(6000);
+            payload.reserve(6000); // timestamp: 34, bloc: 8, samplesX: 13+4N+(N-1), {,,,}:5 --> 10*N+71
 
             payload += "{";
             payload += "\"timestamp\":" + String(localBlock.timestamp) + ",";
             payload += "\"bloc\":" + String(blocNumber) + ","; 
-            payload += "\"samples\":[";
+            payload += "\"samples1\":[";
 
             for (uint16_t i = 0; i < BLOCK_SIZE; i++) {
-                payload += String(localBlock.samples[i]);
+                payload += String(localBlock.samples1[i]);
+                if (i < BLOCK_SIZE - 1) payload += ",";
+            }
+            payload += "],\"samples2\":[";
+
+            for (uint16_t i = 0; i < BLOCK_SIZE; i++) {
+                payload += String(localBlock.samples2[i]);
                 if (i < BLOCK_SIZE - 1) payload += ",";
             }
             payload += "]}";
@@ -136,8 +142,9 @@ void sendDataTask(void* parameter) {
 
             
             // Serial monitoring
-            Serial.print("WiFi Task: bloc envoyé = ");
-            Serial.print((int)((readBuffer + BUFFER_COUNT - 1) % BUFFER_COUNT));
+            Serial.print(localBlock.timestamp);
+            Serial.print(" - WiFi Task: bloc envoyé = ");
+            Serial.print((int)((BUFFER_COUNT + readBuffer - 1) % BUFFER_COUNT));
             Serial.print(", HTTP code = ");
             Serial.println(code);
         } else {

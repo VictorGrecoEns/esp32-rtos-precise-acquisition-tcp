@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 import os
 # Chemin du fichier binaire
-FILENAME = os.path.dirname(__file__) + "/data/vg06022026_acq_1.bin"
+FILENAME = os.path.dirname(__file__) + "/data/vg10022026_acq_1/ch_2.bin"
 
 def extract_data(filename):
     # --- Lecture du fichier ---

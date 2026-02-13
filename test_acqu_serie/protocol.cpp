@@ -66,11 +66,13 @@ volatile uint32_t freqEch = 1;
 
 void get_metadata_from_server() {
     uint8_t counter = 250;
+    Serial.print("Waiting the server's metadatas...");
     HTTPClient http;
     http.begin("http://192.168.17.7:5000/config");
     int httpGet = http.GET();
     while ( httpGet != 200 && counter>=0) {
       blink(2,100);
+      Serial.print(".");
       counter -= 1;
       httpGet = http.GET();
     }
@@ -84,9 +86,9 @@ void get_metadata_from_server() {
 
     nbBlocToSend = doc["n_blocks"];
     freqEch      = doc["fe"];
-    Serial.print("Réception du nombre de bloc à échantillonner :");
-    Serial.print(nbBlocToSend);
-    Serial.print(" et ce, à ");
+    Serial.print("\nNumber of blocks to aquire:");
+    Serial.println(nbBlocToSend);
+    Serial.print("Frequency to acquire at: ");
     Serial.print(freqEch);
     Serial.println("Hz");
 }
@@ -143,7 +145,7 @@ void sendDataTask(void* parameter) {
             
             // Serial monitoring
             Serial.print(localBlock.timestamp);
-            Serial.print(" - WiFi Task: bloc envoyé = ");
+            Serial.print(" - WiFi Task: sent block = ");
             Serial.print((int)((BUFFER_COUNT + readBuffer - 1) % BUFFER_COUNT));
             Serial.print(", HTTP code = ");
             Serial.println(code);

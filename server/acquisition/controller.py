@@ -1,14 +1,10 @@
 from time import time
 import numpy as np
 
-import sys
 from acquisition.storage import DataStorage
-
+from acquisition.display import update_disp, init_disp
 
 NB_CHANNELS = 2
-linesToDisplay = 8
-middleLine = "|======|=======|"+NB_CHANNELS*"================|"+"==================|"
-emptyLine = "|  --- |   --- |"+NB_CHANNELS*"      -------   |"+"     ---------    |"
 
 class AcquisitionController:
     def __init__(self, n_blocks: int):
@@ -16,6 +12,7 @@ class AcquisitionController:
         self.received = 0
         self.last_timestamp = None
         self.storages:list[DataStorage]
+        self.nbChannels = NB_CHANNELS
         
 
     def init(self, fe: int, storages: list[DataStorage]):
@@ -34,27 +31,13 @@ class AcquisitionController:
         self.last_timestamp = timestamp
         for i in range(len(self.storages)):
             self.storages[i].append_block(samples[i])
+    
+    def init_display(self, args):
+        init_disp(self, args)
         
-
-    def update_display(self, samples):
-        if self.received % linesToDisplay == 0:
-            print(middleLine)
-            print(3*"\n")
-            sys.stdout.write(f"\033[{linesToDisplay+5}F")
-        
-        print(  f"| {self.received:4d} |"
-              + f"{self.n_blocks:6d} |"
-              + f"{np.mean(np.array(samples[0])):13.2f}   |"
-              + f"{np.mean(np.array(samples[1])):13.2f}   |"
-              + f"{self.delay*1e3:13.2f}     |"
-              + f"{self.timeTot*1e3/self.received:13.2f}     |")
-        
-        if self.received == self.n_blocks:
-            for _ in range(linesToDisplay - self.received % linesToDisplay):
-                print(emptyLine)
-        
-        sys.stdout.flush()
-            
+    def update_display(self,samples):
+        update_disp(self,samples)
+    
     def is_finished(self) -> bool:
         return self.received >= self.n_blocks
 

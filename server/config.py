@@ -21,7 +21,7 @@ def parse_args():
 
     parser.add_argument(
         "--host",
-        default="192.168.17.7"
+        default="0.0.0.0"
     )
 
     parser.add_argument(

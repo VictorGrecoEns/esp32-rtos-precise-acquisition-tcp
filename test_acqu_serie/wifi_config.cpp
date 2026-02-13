@@ -14,11 +14,11 @@ IPAddress subnet(255,255,255,0);
 void connect_wifi() {
     WiFi.config(localIP, gateway, subnet);
     WiFi.begin(ssid, password);
-    Serial.print("Connexion au wifi..");
+    Serial.print("Connection to the local wifi...");
     
     while (WiFi.status() != WL_CONNECTED) {
         blink(1,100);
         Serial.print(".");
     }
-    Serial.println("\nConnecté au wifi !");
+    Serial.println("\nConnected to the local wifi !");
 }

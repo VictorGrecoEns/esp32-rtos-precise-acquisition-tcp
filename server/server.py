@@ -6,11 +6,12 @@ from flask import Flask, request, jsonify
 import socket
 
 from config import parse_args
-from acquisition.controller import AcquisitionController, middleLine, emptyLine, linesToDisplay, NB_CHANNELS
+from acquisition.controller import AcquisitionController, NB_CHANNELS
 from acquisition.storage import DataStorage, BLOC_SIZE
 
 
 logging.getLogger("werkzeug").setLevel(logging.WARNING)
+import numpy as np
 
 FILE_NAME = "vg10022026_acq_1"
 
@@ -48,14 +49,8 @@ def init():
         storages.append(storage)
 
     controller.init(fe, storages)
-    print(f"\nDuree de l'acquisition      = {args.duration_s}s")
-    print(f"Fréquence d'échantillonnage = {controller.fe } Hz")
-    print(f"Nombre de bloc attendus     = {controller.n_blocks}")
-    print(f"Temps estimé                = {controller.n_blocks*BLOC_SIZE/controller.fe:.2f} s --> {1e3*BLOC_SIZE/controller.fe:.2f} ms/bloc\n")
-    print(middleLine)
-    print(f"| Reçu | Total |  Moyenne éch V | Délai récep (ms) |")
-    print(middleLine)
-    print(emptyLine + (linesToDisplay-1) * f"\n{emptyLine}")
+    controller.init_display(args)
+
     return "INIT OK", 200
 
 
@@ -75,9 +70,8 @@ def data():
 
     if controller.is_finished():
         controller.close()
-        print(middleLine)
-        sizeOfFile = [os.path.getsize(os.path.dirname(__file__) + f"/data/{FILE_NAME}/ch_{i+1}.bin") for i in range(NB_CHANNELS)]
-        print(f"\nAcquisition terminée en {controller.timeTot:.1f} s| {sizeOfFile[0] * 1e-3:.2f} ko")
+        sizeOfFiles = np.array([os.path.getsize(os.path.dirname(__file__) + f"/data/{FILE_NAME}/ch_{i+1}.bin") for i in range(NB_CHANNELS)]).mean()
+        print(f"\nAcquisition terminée en {controller.timeTot:.1f} s| {sizeOfFiles * 1e-3:.2f} ko")
     controller.delay = time()
     return "OK", 200
 

@@ -28,7 +28,7 @@ volatile bool acquisitionDone = true;
 
 void start_acquisition() {
     for (uint8_t i = 0; i<BUFFER_COUNT; i++){
-      bufferReady[BUFFER_COUNT] = false;
+      bufferReady[i] = false;
     }
     acquisitionDone = false;
 }

@@ -1,0 +1,37 @@
+Deux tâches : 
+	- acquisition de données à fréquence fixe
+	- envoi de trame lorsqu'une acquisition est fini
+
+1. Acquisition : http://tvaira.free.fr/esp32/esp32-freertos.html
+
+- Définition d'un timer pour réaliser la tâche d'acquisition des échantillons
+
+- Lecture des GPIO concernés : https://docs.espressif.com/projects/esp-idf/en/v4.2/esp32/api-reference/peripherals/adc.html#adc-api-reference-adc-driver
+
+adc1_config_width(ADC_WIDTH_BIT_12);
+adc1_config_channel_atten(ADC1_GPIO34_CHANNEL,ADC_ATTEN_DB_11);
+int val = adc1_get_raw(ADC1_GPIO34_CHANNEL);
+On peut régler l'atténuation telle que: 
+    +----------+------------+--------------------------+
+    |   SoC    | attenuation|   suggested range (mV)   |
+    +==========+============+==========================+
+    |          |  0         |     100 ~ 950            |
+    |          +------------+--------------------------+
+    |          |  2.5       |     100 ~ 1250           |
+    |   ESP32  +------------+--------------------------+
+    |          |  6         |     150 ~ 1750           |
+    |          +------------+--------------------------+
+    |          |  11        |     150 ~ 2450           |
+    +----------+------------+--------------------------+
+
+- Stockage dans un buffer circulaire
+
+
+
+
+
+Exemple chatgpt : https://www.toptal.com/developers/embedded/esp32-audio-sampling
+
+https://github.com/espressif/esp-idf/tree/master/examples/protocols/sockets/tcp_server
+
+https://controllerstech.com/esp32-freertos-multitasking-project/

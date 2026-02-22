@@ -12,7 +12,7 @@ hw_timer_t* timer = nullptr;
 volatile uint32_t timerTicks = 0;
 
 void isrBegin() {
-    TIMER_ISR_FREQ_HZ  = freqEch << 2;
+    TIMER_ISR_FREQ_HZ  = freqEch << 2; // oversampling : 4
     TIMER_ISR_TICKS    = TIMER_BASE_FREQ_HZ / TIMER_ISR_FREQ_HZ; // nb de ticks à attendre avant de relancer une isr (onTimer())
 
     timer = timerBegin(TIMER_BASE_FREQ_HZ);

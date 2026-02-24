@@ -45,22 +45,26 @@ static void tcpTask(void* parameter)
 
         // ===== Vérifie commande serveur =====
        
-        if (!acquisitionStarted && client.available() >= 3)
+        if (!acquisitionStarted && client.available() >= 5)
         {
-            Serial.printf("Task core %d - ",xPortGetCoreID());
-            Serial.println("Vérfication commande serveur");
+            // Serial.printf("Task core %d - ",xPortGetCoreID());
+            // Serial.println("Vérfication commande serveur");
             uint8_t cmd;
             uint16_t nBuf;
+            uint16_t freq;
             client.read(&cmd, 1);
             client.read((uint8_t*)&nBuf, 2);  // little-endian
+            client.read((uint8_t*)&freq, 2);  // little-endian
 
             if (cmd == 1) // START
             {
                 buffersToSend = nBuf;   // initialisation du compteur
                 acquisitionStarted = true;
-                Serial.printf("Task core %d - ",xPortGetCoreID());
-                Serial.printf("Acquisition started for %d buffers\n", buffersToSend);
-                initAcquisition();     // démarre ISR / timer
+                // Serial.printf("Task core %d - ",xPortGetCoreID());
+                if (freq < 10) {freq = 10;}
+                if (freq > 10000) {freq = 10000;}   // limite sécurité
+                Serial.printf("Acquisition started for %d buffers at %dHz\n", buffersToSend, freq);
+                initAcquisition(freq);     // démarre ISR / timer
             }
         }
 
@@ -72,7 +76,7 @@ static void tcpTask(void* parameter)
             uint8_t bufferIndex;
             if (waitForReadyBuffer(&bufferIndex))
             {
-                Serial.printf("Task core %d - ",xPortGetCoreID());Serial.println("Envoi des buffers");
+                // Serial.printf("Task core %d - ",xPortGetCoreID());Serial.println("Envoi des buffers");
                 uint16_t* buffer = getBufferByIndex(bufferIndex);
                 sendFrame(buffer, bufferIndex);
 
@@ -81,7 +85,7 @@ static void tcpTask(void* parameter)
                 {
                     stopAcquisition();
                     acquisitionStarted = false;
-                    client.println("STOP");  // informe serveur
+                    // client.println("STOP");  // informe serveur
                 }
             }
         }
@@ -95,21 +99,21 @@ static void tcpTask(void* parameter)
 static bool ensureConnected()
 {
     if (!WiFiConnected()) {
-        Serial.println("Wifi not connected");
+        // Serial.println("Wifi not connected");
         return false;
     }
     if (client.connected()) {
-        Serial.println("Client connected");
+        // Serial.println("Client connected");
         return true;
     }
     client.stop();
-    Serial.println("Trying to connect to the server...");
+    // Serial.println("Trying to connect to the server...");
 
     if (client.connect(SERVER_IP, SERVER_PORT)) {
-        Serial.println("TCP connection established!");
+        // Serial.println("TCP connection established!");
         return true;
     } else {
-        Serial.println("TCP connection failed!");
+        // Serial.println("TCP connection failed!");
         return false;
     }
 }

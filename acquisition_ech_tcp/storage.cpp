@@ -59,6 +59,12 @@ void switchToNextWriteBuffer()
     sampleIndex = 0;
 }
 
+void notifyBufferReady(uint8_t bufferIndex)
+{
+    bufferTimestamps[bufferIndex] = esp_timer_get_time();
+    xQueueSend(bufferReadyQueue, &bufferIndex, portMAX_DELAY);
+}
+
 void notifyBufferReadyFromISR(uint8_t bufferIndex)
 {
     bufferTimestamps[bufferIndex] = esp_timer_get_time();

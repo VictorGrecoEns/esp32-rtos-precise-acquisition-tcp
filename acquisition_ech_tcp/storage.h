@@ -16,6 +16,7 @@ uint8_t getCurrentWriteBufferIndex();
 void switchToNextWriteBuffer();
 
 void notifyBufferReadyFromISR(uint8_t bufferIndex);
+void notifyBufferReady(uint8_t bufferIndex);
 uint64_t getBufferTimestamp(uint8_t index);
 
 // ===== TASK SIDE =====

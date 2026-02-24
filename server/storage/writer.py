@@ -1,12 +1,13 @@
 import struct
-import os
-from config import NB_CAPTEURS, SAMPLES_PER_CAPTEUR, DIR_PATH
+from os.path import getsize, join
+from config import NB_CAPTEURS, SAMPLES_PER_CAPTEUR
 
 class RawWriter:
 
-    def __init__(self):
+    def __init__(self, repo):
+        self.filePath = repo        
         self.files = [
-            open(os.path.join(DIR_PATH, f"ch_{i+1}.bin"), "wb")
+            open(join(self.filePath, f"ch_{i+1}.bin"), "wb")
             for i in range(NB_CAPTEURS)
         ]
 
@@ -19,6 +20,9 @@ class RawWriter:
             packed = struct.pack('<Q' + 'H'*SAMPLES_PER_CAPTEUR, *data)
             self.files[i].write(packed)
 
+    def get_file_size(self):
+        return getsize(join(self.filePath, f"ch_1.bin"))
+        
     def close(self):
         for f in self.files:
             f.close()

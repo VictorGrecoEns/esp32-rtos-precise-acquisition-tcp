@@ -2,21 +2,23 @@ from network.protocol import build_start_command, parse_buffer
 from acquisition.buffer import Buffer
 from storage.writer import RawWriter
 from storage.reorder import reorder_files
-from config import FRAME_SIZE, DIR_PATH
-from os.path import getsize, join
+from config import FRAME_SIZE
+from acquisition.terminal_table import TerminalTable
 
 class AcquisitionSession:
 
-    def __init__(self, server, n_buffers, freq_acq):
+    def __init__(self, server, n_buffers, freq_acq, repo):
         self.server = server
         self.n_buffers = n_buffers
         self.freq_acq = freq_acq
-        self.writer = RawWriter()
+        self.writer = RawWriter(repo)
+        self.repo = repo
 
     def run(self):
 
         self.server.start()
-
+        table = TerminalTable(self.n_buffers, self.freq_acq)
+        
         # START ESP32
         cmd = build_start_command(self.n_buffers, self.freq_acq)
         self.server.send(cmd)
@@ -34,18 +36,20 @@ class AcquisitionSession:
 
                 self.writer.write_buffer(buffer)
 
-                print(f"{buffers_received} - timestamp={timestamp}")
+                sensors = buffer.split_by_sensor()
                 buffers_received += 1
+                table.update(buffers_received, timestamp, sensors)
+                
 
 
         finally:
 
+            sizeOfFiles = self.writer.get_file_size()
             self.writer.close()
             self.server.close()
-            sizeOfFiles = getsize(join(DIR_PATH, f"ch_1.bin"))
-            print(f"Acquisition terminée ({1e-3 * sizeOfFiles:.2f} ko)")
+            print(f"\nAcquisition terminée ({1e-3 * sizeOfFiles:.2f} ko)")
             
 
         # Réécriture triée
-        # reorder_files()
+        # reorder_files(dirname(__file__) + "/data/" + self.repo )
         # print("Fichiers réordonnés par timestamp")

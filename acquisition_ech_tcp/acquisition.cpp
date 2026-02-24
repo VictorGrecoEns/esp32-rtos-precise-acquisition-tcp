@@ -46,7 +46,7 @@ void initAcquisition(uint16_t sampleFrequency)
     timerAttachInterrupt(timer, &onTimer);
     timerWrite(timer, 0);
     timerAlarm(timer, TIMER_ISR_TICKS, true, 0);
-    Serial.printf("Initialisation timer à fe = %d Hz\n", SAMPLE_FREQUENCY);
+    // Serial.printf("Initialisation timer à fe = %d Hz\n", sampleFrequency);
     
 }
 

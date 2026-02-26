@@ -7,19 +7,19 @@
 static TaskHandle_t tcpTaskHandle;
 static WiFiClient client;
 
-static volatile uint16_t buffersToSend = 0;       // nombre de buffers restant à envoyer
-static volatile bool acquisitionStarted = false; // indique si acquisition active
+static volatile uint16_t buffersToSend = 0;       // number of buffer to send to the server
+static volatile bool acquisitionStarted = false;  
 
 
-// Prototype privé
+// Private/static prototype 
 static void tcpTask(void* parameter);
 static bool ensureConnected();
 static void sendFrame(uint16_t* buffer, uint8_t bufferIndex);
 
-// Initialisation
+// Initialization
 void initTCP()
 {
-    Serial.println("Initalisation tache tcp");
+    Serial.print("TCP task ");
     xTaskCreatePinnedToCore(
         tcpTask,        // Function of the task
         "TCP_Task",     // Name of the task
@@ -29,6 +29,7 @@ void initTCP()
         &tcpTaskHandle, // Task handle
         0               // Core where the task should run
     );
+    Serial.println("initialized");
 }
 
 // Tache TCP
@@ -36,39 +37,50 @@ static void tcpTask(void* parameter)
 {
     while (true)
     {
-        // ===== Connexion TCP =====
+        // ===== TCP connexion =====
         if (!ensureConnected())
         {
             vTaskDelay(pdMS_TO_TICKS(1000));
             continue;
         }
 
-        // ===== Vérifie commande serveur =====
-       
-        if (!acquisitionStarted && client.available() >= 5)
-        {
+        // ===== Receiving the acquisition parameters =====
+        
+        if (!acquisitionStarted && client.available() >= 5)    // acquisition parameters received from the server: [start, n_buffer, freq_ech]
+        {   
             // Serial.printf("Task core %d - ",xPortGetCoreID());
             // Serial.println("Vérfication commande serveur");
             uint8_t cmd;
             uint16_t nBuf;
             uint16_t freq;
-            client.read(&cmd, 1);
-            client.read((uint8_t*)&nBuf, 2);  // little-endian
-            client.read((uint8_t*)&freq, 2);  // little-endian
+            client.read(&cmd, 1); // 1 byte
+            client.read((uint8_t*)&nBuf, 2);  // 2 bytes in little-endian
+            client.read((uint8_t*)&freq, 2);  // 2 bytes in little-endian
 
             if (cmd == 1) // START
             {
-                buffersToSend = nBuf;   // initialisation du compteur
-                acquisitionStarted = true;
+                Serial.print("Acquisition started ");
+                // Initialization of the acquisition
+                buffersToSend = nBuf;               // count initialized
+                acquisitionStarted = true;          // begining the acquisition
                 // Serial.printf("Task core %d - ",xPortGetCoreID());
-                if (freq < 10) {freq = 10;}
-                if (freq > 10000) {freq = 10000;}   // limite sécurité
-                Serial.printf("Acquisition started for %d buffers at %dHz\n", buffersToSend, freq);
+
+                // applying frequency saturations
+                if (freq < 10) {freq = 10;}         //  Low saturation of the acquisition frequency
+                if (freq > 10000) {freq = 10000;}   // High saturation of the acquisition frequency
+
+                // Computing the duration of the acquisition
+                unsigned long totalSamples = (unsigned long)buffersToSend * N_SAMPLES;
+                unsigned long totalSeconds = totalSamples/freq;
+                unsigned long restSeconds = totalSamples%freq;
+
+                Serial.printf("for %d buffers at %dHz --> %dh%dmin%ds\n", buffersToSend, freq, totalSeconds / 3600UL, (totalSeconds % 3600UL) / 60UL, totalSeconds % 60UL) ;
+                // Begining of the acquisition task
                 initAcquisition(freq);     // démarre ISR / timer
             }
         }
 
-        // ===== Envoi des buffers =====
+        // ===== Sending buffers =====
         
         if (acquisitionStarted && buffersToSend > 0)
         {
@@ -76,21 +88,20 @@ static void tcpTask(void* parameter)
             uint8_t bufferIndex;
             if (waitForReadyBuffer(&bufferIndex))
             {
-                // Serial.printf("Task core %d - ",xPortGetCoreID());Serial.println("Envoi des buffers");
+                // Serial.printf("Task core %d - ",xPortGetCoreID());
+                // Serial.println("Envoi des buffers");
                 uint16_t* buffer = getBufferByIndex(bufferIndex);
                 sendFrame(buffer, bufferIndex);
 
-                buffersToSend = buffersToSend - 1;  // décrémente compteur
-                if (buffersToSend == 0)
-                {
+                buffersToSend = buffersToSend - 1;  // decreasing the number of buffer to send
+                if (buffersToSend == 0){
                     stopAcquisition();
                     acquisitionStarted = false;
-                    // client.println("STOP");  // informe serveur
                 }
             }
         }
 
-        vTaskDelay(pdMS_TO_TICKS(1));
+        vTaskDelay(pdMS_TO_TICKS(1)); // short delay to make sure the core can do others tasks
     }
 }
 

@@ -20,6 +20,11 @@ class RawWriter:
             packed = struct.pack('<Q' + 'H'*SAMPLES_PER_CAPTEUR, *data)
             self.files[i].write(packed)
 
+    def write_header(self, freq, n_buffer):
+        packed = struct.pack('<3I',freq, n_buffer,SAMPLES_PER_CAPTEUR)
+        for i in range(NB_CAPTEURS):
+            self.files[i].write(packed)
+        
     def get_file_size(self):
         return getsize(join(self.filePath, f"ch_1.bin"))
         

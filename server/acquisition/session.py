@@ -23,6 +23,9 @@ class AcquisitionSession:
         cmd = build_start_command(self.n_buffers, self.freq_acq)
         self.server.send(cmd)
 
+        # Initialisation des fichiers
+        self.writer.write_header(self.freq_acq, self.n_buffers)
+        
         buffers_received = 0
 
         try:

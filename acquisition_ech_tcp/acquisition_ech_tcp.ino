@@ -10,13 +10,13 @@ void monitorSystem();
 void setup()
 {
     blinkLED(5, 100);
-    initSerial();
-    initConfig();
-    initStorage();      // crée buffers + queue
+    initSerial();   // Serial communication intialization 
+    initConfig();   // Configuration initialization
+    initStorage();      // Buffer and queue creations
     delay(200);
     blinkLED(5, 100);
-    initWiFi();
-    initTCP();          // crée tâche TCP
+    initWiFi();     // connection to wifi
+    initTCP();      // connection to the server and intialisation of the tcp communication
     delay(200);
 
 }

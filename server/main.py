@@ -9,7 +9,7 @@ def main():
 
     server = TCPServer(args.host, args.port)
     
-    session = AcquisitionSession(server, n_buffers, args.freq, make_repo(args.repo))
+    session = AcquisitionSession(server, n_buffers, args.freq, make_repo(args.repo, createRepo=True))
 
     session.run()
 

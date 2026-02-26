@@ -59,7 +59,7 @@ def compute_n_buffers(duration_s, freq_acq):
     print(f"Estimation temps total: {n*SAMPLES_PER_CAPTEUR/freq_acq:.2f} s | {1e3*SAMPLES_PER_CAPTEUR/freq_acq:.2f}ms/buffer")
     return n
 
-def make_repo(repository):
+def make_repo(repository, createRepo:bool=True):
     repo = join(dirname(__file__), "data", repository)
     makedirs(repo, exist_ok=True)
     return repo

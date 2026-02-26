@@ -3,40 +3,56 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 import os
-from acquisition.controller import NB_CHANNELS
-# Chemin du fichier binaire
-FILENAME = os.path.dirname(__file__) + "/data/vg10022026_acq_1"
+from config import parse_args, make_repo, NB_CAPTEURS, DATA_NAME
 
-def extract_data(filename):
-    # --- Lecture du fichier ---
-    samples=[]
-    for i in range(NB_CHANNELS):
-        filepath = Path(filename)/f"ch_{i+1}.bin"
+args = parse_args()
+DATA_PATH = make_repo(args.repo, createRepo=False)
+
+def extract_data(folder):
+    all_sensors = []
+    freq = 0
+
+    for i in range(NB_CAPTEURS):
+        filepath = Path(folder) / f"ch_{i+1}.bin"
+        sensor_data = []
+
         with open(filepath, "rb") as f:
-            # Header minimal : fe (uint32)
-            fe, = struct.unpack("<I", f.read(4))
-            # print(f"Fréquence d'échantillonnage: {fe} Hz")
+            # --- Header ---
+            freq_i, n_buffer, samples_per_buffer = struct.unpack("<3I", f.read(12))
+            freq = freq_i  # identique pour tous les fichiers
 
-            # Lecture de tout le reste du fichier
-            # Chaque échantillon = uint16
-            samples.append(np.frombuffer(f.read(), dtype=np.uint16))
+            # --- Lecture des buffers ---
+            for _ in range(n_buffer):
+                raw = f.read(8 + samples_per_buffer * 2)
+                unpacked = struct.unpack('<Q' + 'H' * samples_per_buffer, raw)
+
+                timestamp = unpacked[0]
+                samples = unpacked[1:]
+
+                sensor_data.extend(samples)
+
+        all_sensors.append(np.array(sensor_data, dtype=np.uint16))
 
     # --- Création du vecteur temps ---
-    times = np.arange(len(samples[0])) / fe
-    
-    return times, samples
+    n_total_samples = len(all_sensors[0])
+    times = np.arange(n_total_samples) / freq
 
-t,s = extract_data(FILENAME)
+    return times, all_sensors
+
+
+t, sensors = extract_data(DATA_PATH)
 
 # --- Plot ---
-fig, axs = plt.subplots(2, 1, figsize=(12, 6))
-axs[0].plot(t, s[0], linewidth=1)
-axs[0].grid(True)
-axs[0].set_ylabel("Valeur ch1 (0-4095)")
-axs[0].set_title("Tracé des données acquises")
-axs[1].plot(t, s[1], linewidth=1)
-axs[1].grid(True)
-axs[1].set_xlabel("Temps (s)")
-axs[1].set_ylabel("Valeur ch2 (0-4095)")
+fig, axs = plt.subplots(NB_CAPTEURS, 1, figsize=(12, 6), sharex=True)
+
+if NB_CAPTEURS == 1:
+    axs = [axs]
+
+for i in range(NB_CAPTEURS):
+    axs[i].plot(t, sensors[i], linewidth=1)
+    axs[i].grid(True)
+    axs[i].set_ylabel(f"Ch{i+1} (0-4095)")
+
+axs[-1].set_xlabel("Temps (s)")
 plt.tight_layout()
 plt.show()
